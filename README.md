@@ -1,6 +1,6 @@
 # TEF Oral Simulator
 
-Simulador web (archivo único) para practicar la **Expresión Oral del TEF Canada** con enfoque en estudiantes hispanohablantes nivel **B1 → B2**.
+Simulador web para practicar la **Expresión Oral del TEF Canada** con enfoque en estudiantes hispanohablantes nivel **B1 → B2**.
 
 ## Qué incluye
 

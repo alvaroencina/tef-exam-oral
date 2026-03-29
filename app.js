@@ -1,362 +1,8 @@
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>TEF Canada — Simulateur Expression Orale</title>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css">
+// Utilities
+'use strict';
+const $ = (id) => document.getElementById(id);
+const $$ = (selector) => document.querySelectorAll(selector);
 
-</head>
-<body>
-<div class="app">
-
-<header>
-  <div class="logo">
-    <span class="logo-text">TEF·Oral</span>
-    <span class="logo-sub">Simulateur IA</span>
-  </div>
-  <div class="score-badge">
-    Session · <span id="sessionScore">—</span>
-  </div>
-</header>
-
-<main>
-
-  <!-- ══════════ SCREEN: HOME ══════════ -->
-  <div id="screen-home" class="screen active">
-    <div class="hero">
-      <div class="hero-label">Expression Orale · TEF Canada · Niveau B1 → B2</div>
-      <h1>Prépare ton <em>oral</em><br>comme un expert</h1>
-      <p>Monologue, dialogue et compréhension — les 3 parties du TEF avec analyse IA bilingüe (français + español), adaptée à ton niveau B1.</p>
-    </div>
-
-    <div style="background:rgba(125,172,232,0.08); border:1px solid rgba(125,172,232,0.25); border-radius:12px; padding:16px 20px; margin-bottom:32px; display:flex; gap:16px; flex-wrap:wrap;">
-      <div style="display:flex; align-items:center; gap:8px; font-size:0.82rem;">
-        <span style="background:rgba(125,172,232,0.2); color:var(--accent2); padding:3px 10px; border-radius:100px; font-weight:600; font-size:0.75rem;">B1</span>
-        <span style="color:var(--muted);">Ton niveau actuel — objectif B2/C1</span>
-      </div>
-      <div style="display:flex; align-items:center; gap:8px; font-size:0.82rem;">
-        <span style="background:rgba(232,199,125,0.15); color:var(--accent); padding:3px 10px; border-radius:100px; font-weight:600; font-size:0.75rem;">3 PARTIES</span>
-        <span style="color:var(--muted);">Monologue · Dialogue · Compréhension</span>
-      </div>
-      <div style="display:flex; align-items:center; gap:8px; font-size:0.82rem;">
-        <span style="background:rgba(125,232,180,0.15); color:var(--accent3); padding:3px 10px; border-radius:100px; font-weight:600; font-size:0.75rem;">🌐 ES+FR</span>
-        <span style="color:var(--muted);">Análisis bilingüe</span>
-      </div>
-    </div>
-
-    <p class="section-title">Choisis ta catégorie de thème</p>
-    <p class="section-sub">Sujets réels adaptés au TEF Canada. Tu pratiqueras les 3 parties dans chaque session.</p>
-
-    <!-- MIC PERMISSION BOX -->
-    <div style="background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:24px; margin-bottom:28px;">
-      <div style="display:flex; align-items:flex-start; gap:16px;">
-        <div style="font-size:2rem; flex-shrink:0; margin-top:2px;">🎙</div>
-        <div style="flex:1;">
-          <p style="font-weight:600; font-size:0.92rem; margin-bottom:6px;">Acceso al micrófono</p>
-          <p style="font-size:0.82rem; color:var(--muted); line-height:1.6; margin-bottom:16px;">
-            La app graba tu voz <strong style="color:var(--text);">localmente en tu navegador</strong> — el audio nunca se envía a ningún servidor. Solo se envía texto descriptivo a la API para el análisis. Activa el micrófono antes de comenzar.
-          </p>
-          <div id="micPermBox">
-            <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
-              <button id="micPermBtn" class="btn btn-primary" onclick="requestMicPermission()" style="padding:10px 22px; font-size:0.85rem;">
-                🎙 Activar micrófono
-              </button>
-              <button id="skipMicBtn" class="btn btn-ghost" onclick="skipMic()" style="display:none; padding:10px 18px; font-size:0.82rem;">
-                Continuar sin micrófono →
-              </button>
-            </div>
-          </div>
-          <div id="micPermStatus" style="display:none; margin-top:12px;"></div>
-        </div>
-      </div>
-    </div>
-
-    <div class="category-grid" id="categoryGrid"></div>
-
-    <div id="startBtnWrap" style="display:none; justify-content:space-between; align-items:center; margin-top: 8px;">
-      <button class="btn btn-ghost" onclick="selectAllCats()">Toutes les catégories</button>
-      <button class="btn btn-primary" id="startBtn" onclick="startExam()" disabled>
-        Commencer la simulation →
-      </button>
-    </div>
-
-    <div class="tips-grid">
-      <div class="tip-card"><strong>📋 Partie 1 — Monologue</strong>3 min de préparation + 5–8 min d'exposé structuré sur un sujet de société.</div>
-      <div class="tip-card"><strong>🗣 Partie 2 — Dialogue</strong>Interaction simulée avec un interlocuteur : défendez un rôle assigné en situation réelle.</div>
-      <div class="tip-card"><strong>🎧 Partie 3 — Compréhension orale</strong>Répondez aux questions après avoir écouté ou lu un document audio authentique.</div>
-      <div class="tip-card"><strong>📊 Score TEF · B1 → B2</strong>Objectif : dépasser 225 pts. L'IA t'explique chaque critère en español y en français.</div>
-    </div>
-  </div>
-
-  <!-- ══════════ SCREEN: PREP ══════════ -->
-  <div id="screen-prep" class="screen">
-    <div class="exam-header">
-      <div class="part-badge">📋 Préparation</div>
-      <div class="timer-display" id="prepTimer">3:00</div>
-    </div>
-
-    <div class="exam-progress" id="examProgress"></div>
-
-    <div class="prep-banner">
-      ⏳ Lisez attentivement le sujet. Notez vos idées. La prise de parole commencera automatiquement.
-    </div>
-
-    <div class="topic-card" id="topicCard">
-      <!-- injected by JS -->
-    </div>
-
-    <!-- LANGUAGE TOOLKIT — PREP -->
-    <div class="toolkit-panel" id="toolkitPrep">
-      <div class="toolkit-header" onclick="toggleToolkit('prep')">
-        <div class="toolkit-header-left">
-          🧰 Caja de herramientas lingüísticas
-          <span style="background:rgba(232,199,125,0.15); color:var(--accent); font-size:0.68rem; padding:2px 8px; border-radius:100px;">IA · B1→B2</span>
-        </div>
-        <div class="toolkit-header-right">
-          Conectores · Palabras clave · Frases útiles
-          <span class="toolkit-toggle-icon" id="toolkitPrepIcon">▼</span>
-        </div>
-      </div>
-      <div class="toolkit-body" id="toolkitPrepBody">
-        <div class="toolkit-loading" id="toolkitPrepLoading">
-          <div class="mini-spinner"></div>
-          Generando herramientas lingüísticas para este tema…
-        </div>
-        <div id="toolkitPrepContent" style="display:none;"></div>
-      </div>
-    </div>
-
-    <div style="display:flex; gap:12px; justify-content:flex-end; margin-top: 8px;">
-      <button class="btn btn-ghost" onclick="goHome()">← Quitter</button>
-      <button class="btn btn-primary" onclick="startRecording()">🎙 Commencer maintenant</button>
-    </div>
-  </div>
-
-  <!-- ══════════ SCREEN: RECORD ══════════ -->
-  <div id="screen-record" class="screen">
-    <div class="exam-header">
-      <div class="part-badge">🔴 Prise de Parole</div>
-      <div class="timer-display" id="recTimer">8:00</div>
-    </div>
-
-    <div class="exam-progress" id="examProgress2"></div>
-
-    <div class="topic-card" id="topicCardMini" style="padding: 20px 28px;">
-      <!-- mini version injected -->
-    </div>
-
-    <!-- LANGUAGE TOOLKIT — DURING RECORDING (compact) -->
-    <div class="toolkit-panel" id="toolkitRec" style="margin-bottom:16px;">
-      <div class="toolkit-header" onclick="toggleToolkit('rec')">
-        <div class="toolkit-header-left">🧰 Herramientas disponibles <span style="font-size:0.7rem; opacity:0.7; font-weight:400;">— clic para consultar mientras hablas</span></div>
-        <div class="toolkit-header-right"><span class="toolkit-toggle-icon" id="toolkitRecIcon">▼</span></div>
-      </div>
-      <div class="toolkit-body" id="toolkitRecBody">
-        <div id="toolkitRecContent"></div>
-      </div>
-    </div>
-
-    <div class="recorder-section">
-      <div class="rec-status">
-        <div class="rec-dot active" id="recDot"></div>
-        <span id="recStatusText">Enregistrement en cours...</span>
-      </div>
-
-      <div class="waveform-container">
-        <canvas id="waveform"></canvas>
-      </div>
-
-      <p style="font-size:0.8rem; color: var(--muted); margin-bottom: 20px;">
-        🗣 Parlez clairement et structurez votre réponse : introduction → développement → conclusion
-      </p>
-
-      <div class="rec-buttons">
-        <button class="btn btn-ghost" id="pauseBtn" onclick="togglePause()">⏸ Pause</button>
-        <button class="btn btn-danger" onclick="stopRecording()">⬛ Terminer l'enregistrement</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- ══════════ SCREEN: REVIEW ══════════ -->
-  <div id="screen-review" class="screen">
-    <div class="exam-header">
-      <div class="part-badge">✅ Vérification</div>
-      <span style="color:var(--muted); font-size:0.85rem;">Réécoutez avant d'envoyer</span>
-    </div>
-
-    <div class="analysis-card">
-      <div class="analysis-card-header">
-        <div class="analysis-card-title">🎧 Votre enregistrement</div>
-      </div>
-      <div class="analysis-card-body">
-        <audio id="audioPlayback" controls></audio>
-        <p id="recDuration" style="font-size:0.8rem; color:var(--muted); margin-top:12px;"></p>
-      </div>
-    </div>
-
-    <div class="nav-actions">
-      <button class="btn btn-ghost" onclick="reRecord()">🔄 Réenregistrer</button>
-      <button class="btn btn-primary" onclick="goToDialogue()">Partie 2 : Dialogue →</button>
-    </div>
-  </div>
-
-  <!-- ══════════ SCREEN: DIALOGUE ══════════ -->
-  <div id="screen-dialogue" class="screen">
-    <div class="exam-header">
-      <div class="part-badge" style="background:rgba(125,232,180,0.1); border-color:rgba(125,232,180,0.3); color:var(--accent3);">💬 Partie 2 — Dialogue</div>
-      <div class="timer-display" id="dialogueTimer">5:00</div>
-    </div>
-
-    <div class="exam-progress" id="examProgress3"></div>
-
-    <div class="topic-card" id="dialogueCard"></div>
-
-    <!-- LANGUAGE TOOLKIT — DIALOGUE -->
-    <div class="toolkit-panel" id="toolkitDlg" style="margin-top:16px;">
-      <div class="toolkit-header" onclick="toggleToolkit('dlg')">
-        <div class="toolkit-header-left">🧰 Herramientas para el diálogo</div>
-        <div class="toolkit-header-right"><span class="toolkit-toggle-icon" id="toolkitDlgIcon">▼</span></div>
-      </div>
-      <div class="toolkit-body" id="toolkitDlgBody">
-        <div id="toolkitDlgContent"></div>
-      </div>
-    </div>
-
-    <div class="recorder-section" style="margin-top:20px;">
-      <div class="rec-status">
-        <div class="rec-dot active" id="recDot2"></div>
-        <span id="recStatusText2">Enregistrement en cours...</span>
-      </div>
-      <div class="waveform-container">
-        <canvas id="waveform2"></canvas>
-      </div>
-      <p style="font-size:0.8rem; color: var(--muted); margin-bottom: 20px;">
-        🗣 Défendez votre rôle avec conviction. Réagissez aux arguments de l'autre partie.
-      </p>
-      <div class="rec-buttons">
-        <button class="btn btn-ghost" onclick="togglePause2()">⏸ Pause</button>
-        <button class="btn btn-danger" onclick="stopDialogue()">⬛ Terminer le dialogue</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- ══════════ SCREEN: COMPREHENSION ══════════ -->
-  <div id="screen-comprehension" class="screen">
-    <div class="exam-header">
-      <div class="part-badge" style="background:rgba(196,125,232,0.1); border-color:rgba(196,125,232,0.3); color:#c47de8;">🎧 Partie 3 — Compréhension</div>
-      <div class="timer-display" id="compTimer">4:00</div>
-    </div>
-
-    <div class="exam-progress" id="examProgress4"></div>
-
-    <div class="topic-card" id="compCard"></div>
-
-    <div style="margin-top:20px;">
-      <p style="font-size:0.8rem; color:var(--muted); margin-bottom:14px; text-transform:uppercase; letter-spacing:1.5px; font-weight:600;">Répondez oralement à ces questions</p>
-      <div id="compQuestions" style="display:flex; flex-direction:column; gap:12px;"></div>
-    </div>
-
-    <div class="recorder-section" style="margin-top:20px;">
-      <div class="rec-status">
-        <div class="rec-dot active" id="recDot3"></div>
-        <span id="recStatusText3">Répondez aux questions oralement…</span>
-      </div>
-      <div class="waveform-container">
-        <canvas id="waveform3"></canvas>
-      </div>
-      <div class="rec-buttons">
-        <button class="btn btn-ghost" onclick="togglePause3()">⏸ Pause</button>
-        <button class="btn btn-danger" onclick="stopComprehension()">⬛ Terminer</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- ══════════ SCREEN: ANALYSIS ══════════ -->
-  <div id="screen-analysis" class="screen">
-
-    <div id="analysisLoading" class="analysis-loading">
-      <div class="spinner"></div>
-      <p style="color:var(--muted); font-size:0.9rem;">L'IA analyse votre performance TEF…</p>
-      <p style="color:var(--border); font-size:0.8rem; margin-top:8px;" id="loadingStep">Transcription en cours…</p>
-    </div>
-
-    <div id="analysisContent" style="display:none;">
-      <div id="analysisModeBanner" style="display:none; margin-bottom:16px; background:rgba(232,125,125,0.12); border:1px solid rgba(232,125,125,0.32); color:var(--danger); border-radius:10px; padding:12px 14px; font-size:0.82rem; line-height:1.6;"></div>
-
-      <!-- SCORE GLOBAL -->
-      <div class="analysis-card" style="margin-bottom:20px;">
-        <div class="analysis-card-header">
-          <div class="analysis-card-title">🏆 Score global estimé · Puntuación global estimada</div>
-          <span style="font-size:0.8rem; color:var(--muted);">Sur / Sobre 360 pts</span>
-        </div>
-        <div class="global-score-wrap">
-          <div class="score-circle">
-            <svg width="120" height="120" viewBox="0 0 120 120">
-              <circle cx="60" cy="60" r="52" fill="none" stroke="var(--border)" stroke-width="8"/>
-              <circle cx="60" cy="60" r="52" fill="none" stroke="var(--accent)" stroke-width="8"
-                stroke-dasharray="326.7" stroke-dashoffset="326.7"
-                stroke-linecap="round" id="scoreCirclePath" style="transition: stroke-dashoffset 1.5s cubic-bezier(0.4,0,0.2,1)"/>
-            </svg>
-            <div class="score-circle-val" id="globalScoreVal">—</div>
-          </div>
-          <div id="globalScoreLevel" class="score-level"></div>
-        </div>
-      </div>
-
-      <!-- CRITÈRES -->
-      <div class="analysis-card">
-        <div class="analysis-card-header">
-          <div class="analysis-card-title">📊 Critères d'évaluation TEF</div>
-        </div>
-        <div class="analysis-card-body" id="criteriaBody">
-          <!-- injected -->
-        </div>
-      </div>
-
-      <!-- TRANSCRIPTION + CORRECTIONS -->
-      <div class="analysis-card">
-        <div class="analysis-card-header">
-          <div class="analysis-card-title">📝 Transcription & corrections</div>
-        </div>
-        <div class="analysis-card-body">
-          <p style="font-size:0.8rem; color:var(--muted); margin-bottom:12px;">Ce que vous avez dit (simulé d'après l'analyse)</p>
-          <div class="transcript-box" id="transcriptBox"></div>
-        </div>
-      </div>
-
-      <!-- FEEDBACK QUALITATIF -->
-      <div class="analysis-card">
-        <div class="analysis-card-header">
-          <div class="analysis-card-title">💬 Retour détaillé</div>
-        </div>
-        <div class="analysis-card-body" id="feedbackBody">
-          <!-- injected -->
-        </div>
-      </div>
-
-      <!-- VOCABULARY BOOST -->
-      <div class="analysis-card">
-        <div class="analysis-card-header">
-          <div class="analysis-card-title">📚 Vocabulaire à intégrer</div>
-        </div>
-        <div class="analysis-card-body" id="vocabBody">
-          <!-- injected -->
-        </div>
-      </div>
-
-      <div class="nav-actions">
-        <button class="btn btn-ghost" onclick="goHome()">← Nouveau thème</button>
-        <button class="btn btn-primary" onclick="nextTopic()">Sujet suivant →</button>
-      </div>
-    </div>
-  </div>
-
-</main>
-</div>
-
-<script>
 // ══════════════════════════════════════
 //  DATA — TEF TOPICS
 // ══════════════════════════════════════
@@ -531,7 +177,7 @@ let state = {
 //  INIT
 // ══════════════════════════════════════
 function initCategories() {
-  const grid = document.getElementById('categoryGrid');
+  const grid = $('categoryGrid');
   grid.innerHTML = CATEGORIES.map(c => `
     <div class="category-card" id="cat-${c.id}" onclick="toggleCat('${c.id}')">
       <span class="cat-icon">${c.icon}</span>
@@ -544,17 +190,17 @@ function initCategories() {
 function toggleCat(id) {
   if (state.selectedCats.has(id)) state.selectedCats.delete(id);
   else state.selectedCats.add(id);
-  document.getElementById(`cat-${id}`).classList.toggle('selected', state.selectedCats.has(id));
-  const btn = document.getElementById('startBtn');
+  $(`cat-${id}`).classList.toggle('selected', state.selectedCats.has(id));
+  const btn = $('startBtn');
   if (btn) btn.disabled = state.selectedCats.size === 0;
 }
 
 function selectAllCats() {
   CATEGORIES.forEach(c => {
     state.selectedCats.add(c.id);
-    document.getElementById(`cat-${c.id}`).classList.add('selected');
+    $(`cat-${c.id}`).classList.add('selected');
   });
-  const btn = document.getElementById('startBtn');
+  const btn = $('startBtn');
   if (btn) btn.disabled = false;
 }
 
@@ -869,8 +515,8 @@ function getFallbackToolkit(topic) {
 //  RENDER TOOLKIT PANELS
 // ══════════════════════════════════════
 function renderToolkitContent(key) {
-  const el = document.getElementById(`toolkit${key}Content`);
-  const loadEl = document.getElementById(`toolkit${key}Loading`);
+  const el = $(`toolkit${key}Content`);
+  const loadEl = $(`toolkit${key}Loading`);
   if (!el) return;
   if (loadEl) loadEl.style.display = 'none';
   el.style.display = 'block';
@@ -1070,7 +716,7 @@ function renderProgress() {
     return `<div class="prog-step ${cls}"></div>`;
   }).join('');
   ['examProgress','examProgress2','examProgress3','examProgress4'].forEach(id => {
-    const el = document.getElementById(id);
+    const el = $(id);
     if (el) el.innerHTML = html;
   });
 }
@@ -1152,7 +798,7 @@ function startPrepTimer() {
 function updateTimerDisplay(id, secs) {
   const m = Math.floor(secs / 60);
   const s = secs % 60;
-  const el = document.getElementById(id);
+  const el = $(id);
   el.textContent = `${m}:${String(s).padStart(2, '0')}`;
   if (secs <= 30) el.classList.add('warning');
   else el.classList.remove('warning');
@@ -1678,8 +1324,8 @@ function renderAnalysis(d) {
 //  NAVIGATION
 // ══════════════════════════════════════
 function showScreen(id) {
-  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-  document.getElementById(id).classList.add('active');
+  $$('.screen').forEach(s => s.classList.remove('active'));
+  $(id).classList.add('active');
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
@@ -1709,5 +1355,7 @@ function nextTopic() {
   }
 }
 
-</body>
-</html>
+// ══════════════════════════════════════
+//  START
+// ══════════════════════════════════════
+initCategories();
