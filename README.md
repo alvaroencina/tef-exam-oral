@@ -18,9 +18,7 @@ Simulador web para practicar la **Expresión Oral del TEF Canada** con enfoque e
 
 ```text
 .
-├── tef-oral-simulator.html   # Estructura y vistas HTML
-├── styles.css                # Estilos globales
-├── app.js                    # Lógica de negocio/UI
+├── tef-oral-simulator.html   # App completa: HTML + CSS + JS
 └── README.md                 # Documentación
 ```
 
@@ -49,7 +47,7 @@ python3 -m http.server 8080
 
 ## Limitaciones actuales
 
-- Es una app **100% front-end** (sin backend).
+- Es una app **100% front-end** en un solo archivo.
 - Las llamadas a IA están en cliente (no ideal para producción).
 - Para producción real, se recomienda backend intermedio para gestionar API keys y validación de respuestas.
 
