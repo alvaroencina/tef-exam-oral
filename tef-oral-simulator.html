@@ -1162,6 +1162,7 @@
     </div>
 
     <div id="analysisContent" style="display:none;">
+      <div id="analysisModeBanner" style="display:none; margin-bottom:16px; background:rgba(232,125,125,0.12); border:1px solid rgba(232,125,125,0.32); color:var(--danger); border-radius:10px; padding:12px 14px; font-size:0.82rem; line-height:1.6;"></div>
 
       <!-- SCORE GLOBAL -->
       <div class="analysis-card" style="margin-bottom:20px;">
@@ -1402,6 +1403,7 @@ let state = {
   sessionScores: [],
   currentDialogue: null,
   currentComp: null,
+  analysisMeta: { isMock: false, error: '' },
 };
 
 // ══════════════════════════════════════
@@ -1622,6 +1624,7 @@ function skipMic() {
 }
 let toolkitData = null;
 let usedChips = new Set();
+let toolkitUsesFallback = false;
 
 // ══════════════════════════════════════
 //  TOOLKIT TOGGLE
@@ -1697,9 +1700,11 @@ Responde ÚNICAMENTE con JSON válido (sin markdown):
     let text = data.content?.map(b => b.text || '').join('') || '';
     text = text.replace(/```json|```/g, '').trim();
     toolkitData = JSON.parse(text);
+    toolkitUsesFallback = false;
   } catch(e) {
     // Fallback with generic but useful data
     toolkitData = getFallbackToolkit(topic);
+    toolkitUsesFallback = true;
   }
 
   usedChips = new Set();
@@ -1751,6 +1756,14 @@ function renderToolkitContent(key) {
 
   const isDialogue = (key === 'Dlg');
   el.innerHTML = buildToolkitHTML(isDialogue);
+
+  if (toolkitUsesFallback) {
+    el.insertAdjacentHTML('afterbegin', `
+      <div style="background:rgba(232,125,125,0.1); border:1px solid rgba(232,125,125,0.28); border-radius:8px; padding:10px 12px; margin-bottom:12px; font-size:0.77rem; color:var(--danger); line-height:1.55;">
+        ⚠️ Herramientas en <strong>modo demo</strong>: se mostró un banco genérico porque la IA en vivo no respondió.
+      </div>
+    `);
+  }
 }
 
 function buildToolkitHTML(isDialogue) {
@@ -2323,6 +2336,7 @@ Responde ÚNICAMENTE con un objeto JSON válido (sin markdown, sin texto extra) 
     let text = data.content?.map(b => b.text || '').join('') || '';
     text = text.replace(/```json|```/g, '').trim();
     const json = JSON.parse(text);
+    state.analysisMeta = { isMock: false, error: '' };
     state.sessionScores.push(json.globalScore);
     renderAnalysis(json);
 
@@ -2330,6 +2344,7 @@ Responde ÚNICAMENTE con un objeto JSON válido (sin markdown, sin texto extra) 
     clearInterval(stepInterval);
     // Fallback mock
     const mock = getMockAnalysis(topic);
+    state.analysisMeta = { isMock: true, error: err?.message || String(err || '') };
     state.sessionScores.push(mock.globalScore);
     renderAnalysis(mock);
   }
@@ -2382,6 +2397,16 @@ function getMockAnalysis(topic) {
 function renderAnalysis(d) {
   document.getElementById('analysisLoading').style.display = 'none';
   document.getElementById('analysisContent').style.display = 'block';
+
+  const modeBanner = document.getElementById('analysisModeBanner');
+  if (state.analysisMeta?.isMock) {
+    const extra = state.analysisMeta.error ? ` Detalle técnico: ${state.analysisMeta.error}` : '';
+    modeBanner.textContent = `⚠️ Resultado en modo demo (simulado): no se pudo obtener análisis IA en vivo.${extra}`;
+    modeBanner.style.display = 'block';
+  } else {
+    modeBanner.style.display = 'none';
+    modeBanner.textContent = '';
+  }
 
   // Score circle
   const pct = (d.globalScore - 60) / 300;
