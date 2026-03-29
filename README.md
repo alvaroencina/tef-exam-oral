@@ -14,11 +14,21 @@ Simulador web para practicar la **Expresión Oral del TEF Canada** con enfoque e
 - Pantalla final de análisis con criterios TEF, feedback bilingüe y vocabulario sugerido.
 - Modo fallback/demo cuando falla la generación IA.
 
+## Arquitectura actual (post-refactor)
+
+El proyecto **ya no es monolítico**. Está dividido en capas claras:
+
+- `tef-oral-simulator.html`: estructura de pantallas y markup.
+- `styles.css`: estilos y responsive.
+- `app.js`: lógica de flujo (timers, grabación, toolkit, análisis, navegación).
+
 ## Estructura del proyecto
 
 ```text
 .
-├── tef-oral-simulator.html   # App completa: HTML + CSS + JS
+├── tef-oral-simulator.html   # Estructura y vistas HTML
+├── styles.css                # Estilos globales
+├── app.js                    # Lógica de negocio/UI
 └── README.md                 # Documentación
 ```
 
@@ -47,7 +57,7 @@ python3 -m http.server 8080
 
 ## Limitaciones actuales
 
-- Es una app **100% front-end** en un solo archivo.
+- Es una app **100% front-end** (sin backend).
 - Las llamadas a IA están en cliente (no ideal para producción).
 - Para producción real, se recomienda backend intermedio para gestionar API keys y validación de respuestas.
 
@@ -56,7 +66,7 @@ python3 -m http.server 8080
 - Mover llamadas IA a un backend (`/api/toolkit`, `/api/analyze`).
 - Guardar API keys en variables de entorno del servidor.
 - Agregar validación fuerte del JSON de respuesta (schema).
-- Separar en módulos (`styles.css`, `app.js`, `data/*.js`).
+- Como siguiente paso, dividir `app.js` en submódulos (`data/`, `services/`, `ui/`, `state/`).
 
 ## Idiomas
 
